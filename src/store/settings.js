@@ -41,7 +41,7 @@ export default {
 			rotation: 0,
 			flip: 'none'
 		},
-		dashboardMode : DashboardMode.default,
+		dashboardMode: DashboardMode.default,
 
 		enabledPlugins: ['Height Map'],
 		plugins: {},							         // Third-party values
@@ -91,10 +91,12 @@ export default {
 					'settings-machine'
 				]
 			}
-		]
+		],
+		configuredUI: {}
 	},
 	getters: {
-		mainMenuConfig: state => state.mainMenu
+		mainMenuConfig: state => state.mainMenu,
+		configuredUI: state => state.configuredUI
 	},
 	actions: {
 		async applyDefaults({ state, dispatch }) {
