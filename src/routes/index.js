@@ -19,12 +19,21 @@ import Webcam from './Job/Webcam.vue'
 import General from './Settings/General.vue'
 import Machine from './Settings/Machine.vue'
 
+import { generatedFactory } from './Generated.vue';
+
 import Page404 from './Page404.vue'
 
 
 // menu starts with a safe clone out of the settings state...
 let cachedMenuJsonString = JSON.stringify(store.getters['settings/mainMenuConfig']);
-export const Menu = Vue.observable(JSON.parse(cachedMenuJsonString))
+export const Menu = Vue.observable(JSON.parse(cachedMenuJsonString));
+
+// configured panels
+let cachedGenUIString = JSON.stringify(store.getters['settings/configuredUI']);
+let tempObj = JSON.parse(cachedGenUIString);
+if (!tempObj.panels) tempObj.panels = [];
+
+export const ConfiguredUI = Vue.observable(tempObj);
 
 export const Routes = []
 
@@ -133,6 +142,11 @@ function injectIntoMenu({ routeObj, routeConfig, namedMenuGroup }) {
 		}
 	});
 
+	// if not specifically placed, configuredUI panels get appended into 'Control' group
+	if (!placed && routeConfig.configuredUI && ! routeConfig.disabled) {
+		namedMenuGroup = 'Control';
+	}
+
 	if (!placed && namedMenuGroup) {
 		// backwards compatibility for existing plugins to inject
 		let group = Menu.find(item => item.name === namedMenuGroup);
@@ -175,31 +189,46 @@ export function registerSettingTab(general, name, component, caption, translated
 // Menu config updates, so we need to reset the menu and load
 // it back in as if it was configured that way originally...
 store.subscribe((mutation) => {
-	if (mutation.type === 'settings/load' && mutation.payload.mainMenuConfig && mutation.payload.mainMenuConfig.length) {
-		let tmpString = JSON.stringify(mutation.payload.mainMenuConfig);
+	if (mutation.type === 'settings/load') {
+		if (mutation.payload.mainMenuConfig && mutation.payload.mainMenuConfig.length) {
+			let tmpString = JSON.stringify(mutation.payload.mainMenuConfig);
 
-		if (tmpString === cachedMenuJsonString) {
-			// nothing changed in the menu, abort updates...
-			return;
+			// quick clear-out of the menu
+			for (const item of Menu) {
+				if (item.pages) {
+					while (item.pages.length > 0) item.pages.pop();
+				}
+			}
+			while (Menu.length > 0) {
+				Menu.pop();
+			}
+
+			// set the new configuration...
+			cachedMenuJsonString = tmpString;
+			let newStart = JSON.parse(tmpString);
+			newStart.forEach(item => Menu.push(item));
+
+			// re-attach the system components
+			keyedMenuItems.forEach(c => injectIntoMenu(c));
 		}
 
-		// quick clear-out of the menu
-		for (const item of Menu) {
-			if (item.pages) {
-				while (item.pages.length > 0) item.pages.pop();
+		if (mutation.payload.configuredUIConfig) {
+			let tmpString = JSON.stringify(mutation.payload.configuredUIConfig);
+
+			while (ConfiguredUI.panels.length > 0) {
+				ConfiguredUI.panels.pop();
+			}
+
+			let newUI = JSON.parse(tmpString);
+
+			ConfiguredUI.templates = newUI.templates || {}
+			ConfiguredUI.scripts = newUI.scripts || {}
+
+			for (const panel of (newUI.panels || [])) {
+				ConfiguredUI.panels.push(panel);
+				Vue.use(generatedFactory(panel));
 			}
 		}
-		while (Menu.length > 0) {
-			Menu.pop();
-		}
-
-		// set the new configuration...
-		cachedMenuJsonString = tmpString;
-		let newStart = JSON.parse(tmpString);
-		newStart.forEach(item => Menu.push(item));
-
-		// re-attach the system components
-		keyedMenuItems.forEach(c => injectIntoMenu(c));
 	}
 });
 
@@ -221,6 +250,13 @@ Vue.use(Webcam)
 // Settings
 Vue.use(General)
 Vue.use(Machine)
+
+// Configured panels
+if (ConfiguredUI.panels) {
+	ConfiguredUI.panels.forEach(panel => {
+		Vue.use(generatedFactory(panel))
+	});
+}
 
 // 404 page
 router.addRoute(
