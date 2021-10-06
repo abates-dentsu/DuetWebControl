@@ -75,7 +75,6 @@ export default {
 	namespaced: true,
 
 	state: {
-		inflated: false,
 		mainMenu: inflateMenuGroups(defaultMenuConfig),
 
 		configuredUI: {
