@@ -114,6 +114,14 @@ export default {
 					let panels = (configContents.configuredUI.panels || []);
 					commit('setPanels', panels);
 				}
+
+				if (configContents.configuredUI.templates) {
+					commit('setTemplates', configContents.configuredUI.templates);
+				}
+
+				if (configContents.configuredUI.scripts) {
+					commit('setScripts', configContents.configuredUI.scripts);
+				}
 			} catch (e) {
 				// dissolve the error, file not being there or loading is fine...
 			}
@@ -191,6 +199,14 @@ export default {
 
 		setPanels (state, panels) {
 			panels.forEach(p => state.configuredUI.panels.push(p));
+		},
+
+		setTemplates (state, templates) {
+			state.configuredUI.templates = templates;
+		},
+
+		setScripts (state, scripts) {
+			state.configuredUI.scripts = scripts;
 		}
 	}
 }
