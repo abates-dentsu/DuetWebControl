@@ -19,6 +19,8 @@ import Webcam from './Job/Webcam.vue'
 import General from './Settings/General.vue'
 import Machine from './Settings/Machine.vue'
 
+import ConfiguredUI from '../routes/ConfiguredUI.vue';
+
 import Page404 from './Page404.vue'
 
 
@@ -41,10 +43,10 @@ export function registerRoute(component, route) {
 
 function registerRouteInternal(component, route) {
 	let routeConfig = route;
-	let namedMenuGroup = null;
+	let menuGroup = null;
 	if (!route.key) {
-		namedMenuGroup = Object.keys(route)[0];
-		let tmp = route[namedMenuGroup];
+		menuGroup = Object.keys(route)[0];
+		let tmp = route[menuGroup];
 		routeConfig = tmp[Object.keys(tmp)[0]];
 	}
 
@@ -85,7 +87,7 @@ function registerRouteInternal(component, route) {
 	}
 
 	// push it into the menu itself...
-	store.commit('mainMenu/setMenuItem', { routeObj, routeConfig, namedMenuGroup });
+	store.commit('mainMenu/setMenuItem', { routeObj, routeConfig, menuGroup });
 
 	Routes.push(routeObj);
 	router.addRoute(routeObj);
@@ -139,6 +141,9 @@ Vue.use(Webcam)
 // Settings
 Vue.use(General)
 Vue.use(Machine)
+
+// Add any configured UI pages/routes
+Vue.use(ConfiguredUI);
 
 // 404 page
 router.addRoute(
