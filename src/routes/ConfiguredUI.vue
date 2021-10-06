@@ -111,6 +111,9 @@ export default {
         await this.sendCode(c);
       }
 
+      const scripts = this.scripts();
+      const templates = this.templates();
+
       if (btn.set && btn.val) {
         // value setting button
         this[btn.val] = btn.set;
@@ -167,10 +170,10 @@ export default {
           sendIt(gcode);
         }
 
-      } else if ((btn.template && this.templates[btn.template]) || (btn.script && this.scripts[btn.script])) {
+      } else if ((btn.template && templates[btn.template]) || (btn.script && scripts[btn.script])) {
         let type = btn.template ? 'template' : 'script';
 
-        let tempStr = this[type + 's'][btn[type]];
+        let tempStr = this[type + 's']()[btn[type]];
         if (tempStr.startsWith('0:/')) {
           tempStr = await this.download({
             filename: tempStr,
@@ -197,11 +200,11 @@ export default {
             eval('func = () => {\ngcode = `' + tempStr + '`;\n}');
           } else {
             // wrap in async running function
-            eval('func = async () => {\n' + tempStr + '\n}');
+            eval('func = async ({ params, gcode, model, sendCode, fixtures, saveFixtures, scripts, templates }) => {\n' + tempStr + '\n;return gcode;\n}');
           }
 
           // run the script function...
-          await func();
+          gcode = await func({ params, gcode, model, sendCode, fixtures, saveFixtures, scripts, templates });
 
         } catch (e) {
           console.log(e);
